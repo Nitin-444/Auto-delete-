@@ -15,11 +15,11 @@ from keep_alive import keep_alive
 from telegram.error import BadRequest
 
 # MongoDB setup
-client = MongoClient(os.getenv('MONGODB_URI', '')) # Add MongoDB url here
+client = MongoClient(os.getenv('MONGODB_URI', ''))  # Enter MongoDB URl Here
 db = client['autodelete']
 settings_collection = db['settings']
 
-# Load settings from MongoDB (if any)
+# Loads settings from MongoDB (if any)
 settings = settings_collection.find_one({"bot_settings": "general"})
 if settings:
     ALLOWED_CHAT_IDS = set(settings.get("allowed_chat_ids", []))
@@ -31,20 +31,24 @@ else:
     SUDO_USERS = set()
     delete_timer = 60
     deletion_enabled = True
-# Made By Downloader Zone
-TOKEN = os.getenv('BOT_TOKEN', '') # Add Bot Token Here
+
+# Add Bot Token and Admin IDs
+TOKEN = os.getenv('BOT_TOKEN', '')  # Bot Token
 ADMIN_IDS = []  # Add more admin IDs as needed
 
 def is_admin_or_sudo(user_id):
+    """Check if the user is an admin or a sudo user."""
     return user_id in ADMIN_IDS or user_id in SUDO_USERS
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Start command, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized access.")
         return
     await update.message.reply_text("Welcome, Admin! Use /status to check bot status or /help for commands.")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Help command, listing available bot commands."""
     await update.message.reply_text(
         "/start - Start bot\n"
         "/help - Show help\n"
@@ -56,6 +60,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show bot status, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized access.")
         return
@@ -69,10 +74,10 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(status_text)
 
 async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Settings panel, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized access.")
         return
-# Made By Downloader Zone
     keyboard = [
         [InlineKeyboardButton("🕐 Set Delete Timer", callback_data="set_timer")],
         [InlineKeyboardButton("✅ Add Chat ID", callback_data="add_chat"),
@@ -90,7 +95,18 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚙️ Bot Settings Panel:", reply_markup=reply_markup)
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Callback query handler for buttons in the settings panel."""
     query = update.callback_query
+    if not is_admin_or_sudo(update.effective_user.id):
+        user_name = update.effective_user.username or (update.effective_user.first_name + ' ' + (update.effective_user.last_name or ''))
+        
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,  # Made By Downloader Zone
+            text=f"@{user_name} You don't have permission to access this menu."
+        )
+        
+        return
+    
     try:
         await query.answer()
     except BadRequest as e:
@@ -101,6 +117,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     data = query.data
 
+# Made By Downloader Zone
     if data == "set_timer":
         keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
         await query.edit_message_text("Send me the new delete timer in seconds:", reply_markup=InlineKeyboardMarkup(keyboard))
@@ -138,8 +155,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         status_text = (
             f"🤖 *Bot Status:*\n"
             f"Delete Timer: {delete_timer} seconds\n"
-            f"Deletion Enabled: `{deletion_enabled}`\n"
-            f"Allowed Chats: `{', '.join(map(str, ALLOWED_CHAT_IDS)) or 'None'}`\n"
+            f"Deletion Enabled: {deletion_enabled}\n"
+            f"Allowed Chats: {', '.join(map(str, ALLOWED_CHAT_IDS)) or 'None'}\n"
             f"Sudo Users: {', '.join(map(str, SUDO_USERS)) or 'None'}"
         )
         keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
@@ -154,6 +171,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data.clear()
 
 async def add_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Add chat ID to allowed chats, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized.")
         return
@@ -169,6 +187,7 @@ async def add_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid chat ID.")
 
 async def remove_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Remove chat ID from allowed chats, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized.")
         return
@@ -184,6 +203,7 @@ async def remove_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid chat ID.")
 
 async def add_sudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Add user ID to sudo users, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized.")
         return
@@ -199,6 +219,7 @@ async def add_sudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid user ID.")
 
 async def remove_sudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Remove user ID from sudo users, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized.")
         return
@@ -214,6 +235,7 @@ async def remove_sudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid user ID.")
 
 async def toggle_deletion(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Toggle message deletion, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized.")
         return
@@ -223,6 +245,7 @@ async def toggle_deletion(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"✅ Deletion {'enabled' if deletion_enabled else 'disabled'}.")
 
 def save_settings():
+    """Save the settings to MongoDB."""
     settings_collection.update_one(
         {"bot_settings": "general"},
         {"$set": {
@@ -234,6 +257,7 @@ def save_settings():
         upsert=True
     )
 
+# Made By Downloader Zone
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
 
@@ -286,7 +310,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
             await update.message.reply_text("❌ Invalid input. Please enter a valid user ID.", reply_markup=InlineKeyboardMarkup(keyboard))
         context.user_data.pop("awaiting_sudo_add", None)
-# Made By Downloader Zone
+
     elif context.user_data.get("awaiting_sudo_remove"):
         try:
             user_id = int(update.message.text)
@@ -299,7 +323,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text("❌ Invalid input. Please enter a valid user ID.", reply_markup=InlineKeyboardMarkup(keyboard))
         context.user_data.pop("awaiting_sudo_remove", None)
 
-    # Auto-delete logic
+# Made By Downloader Zone
     if deletion_enabled and chat_id in ALLOWED_CHAT_IDS:
         await asyncio.sleep(delete_timer)
         try:
@@ -316,7 +340,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             elif update.message:
                 await update.message.reply_text("❌ An error occurred. Please use /settings to open a new menu.")
             return
-    # Log other errors
+    # Made By Downloader Zone
     print(f"Update {update} caused error {context.error}")
 
 keep_alive()
@@ -339,4 +363,5 @@ if __name__ == "__main__":
 
     print("Bot is running...")
     app.run_polling()
-    # Made By Downloader Zone
+
+# Made By Downloader Zone
