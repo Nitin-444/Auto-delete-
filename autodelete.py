@@ -15,7 +15,7 @@ from keep_alive import keep_alive
 from telegram.error import BadRequest
 
 # MongoDB setup
-client = MongoClient(os.getenv('MONGODB_URI', ''))  # Enter MongoDB URl Here
+client = MongoClient(os.getenv('MONGODB_URI', 'mongodb+srv://wemedia360:DfQbsNu54pMHTkUy@deamxbotz1.lfquley.mongodb.net/?retryWrites=true&w=majority&appName=deamxbotz'))  # Enter MongoDB URl Here
 db = client['autodelete']
 settings_collection = db['settings']
 
@@ -375,4 +375,5 @@ if __name__ == "__main__":
 
     print("Bot is running...")
     app.run_polling()
+
 
