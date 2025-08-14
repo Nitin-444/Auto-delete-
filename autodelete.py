@@ -35,8 +35,8 @@ else:
     delete_admins_enabled = True  # Default to deleting admins' messages
 
 # Add Bot Token and Admin IDs
-TOKEN = os.getenv('BOT_TOKEN', '')  # Bot Token
-ADMIN_IDS = []  # Add more admin IDs as needed
+TOKEN = os.getenv('BOT_TOKEN', '8208550925:AAHas2c6vHZBFdW97gWFsq1OwlCv2_sbMLw')  # Bot Token
+ADMIN_IDS = [1397269319]  # Add more admin IDs as needed
 
 def is_admin_or_sudo(user_id):
     """Check if the user is an admin or a sudo user."""
@@ -375,3 +375,4 @@ if __name__ == "__main__":
 
     print("Bot is running...")
     app.run_polling()
+
